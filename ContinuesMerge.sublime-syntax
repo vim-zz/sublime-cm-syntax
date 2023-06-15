@@ -1,0 +1,77 @@
+%YAML 1.2
+---
+# http://www.sublimetext.com/docs/syntax.html
+name: Continues Merge
+version: 2 
+file_extensions:
+  - cm
+scope: source.cm
+extends: Packages/YAML/YAML.sublime-syntax
+
+contexts:
+  main:
+    - match: \b(config)\b
+      scope: keyword.control.cm
+      push: config-children
+    - match: \b(manifest)\b
+      scope: keyword.control.cm
+      push: manifest-children
+    - match: \b(automations)\b
+      scope: keyword.control.cm
+      push: automations-children
+    - match: ^([a-zA-Z_\-][a-zA-Z0-9_\-]*|"[^"]+")
+      scope: keyword.control.cm
+    - include: scope:source.yaml
+
+  jinja-expression:
+    - match: '[^\}]+'
+      meta_scope: support.function.filter
+    - match: \b(every|filter|includes|map|match|nope|reject|some)\b 
+      scope: variable.function
+    - match: \b(not|and|or)\b
+      scope: keyword.operator.logical
+    - match: \b(branch|files|source|repo|pr)\b
+      scope: constant.language
+    - match: 'r/'
+      push: [regex-expression, Packages/Regular Expressions/RegExp.sublime-syntax]
+      with_prototype:
+      - match: '(?=/)'
+        pop: true
+    - match: '}}'
+      pop: true
+  
+  regex-expression:
+    - match: '/'
+      pop: true
+
+  manifest-children:
+    - match: \b(version)\b
+      scope: keyword.control.cm
+      pop: true
+
+  config-children:
+    - match: \b(admin|ignore_files|ignore_repositories|user_mapping)\b
+      scope: keyword.control.cm
+      pop: true
+
+  automations-children:
+    - match: ^(\s*)([a-zA-Z_\-][a-zA-Z0-9_\-]*|"[^"]+")
+      captures:
+        2: entity.name.automation
+      push:
+        - match: \b(if)\b
+          scope: keyword.control.cm
+        - match: \b(run)\b
+          scope: keyword.control.cm
+        - match: \b(action|args)\b
+          scope: keyword.control.cm
+        - match: \b(add-comment|add-label|add-labels|add-reviewers|approve|
+                    close|merge|set-required-approvals|require-reviewers|
+                    request-changes)@v[\d]+\b
+          scope: support.function.action
+        - match: '{{'
+          push: jinja-expression
+        - match: ^(?=\1[^ \t])
+          pop: true
+
+
